@@ -1,0 +1,23 @@
+name: Security Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Run Bandit
+      run: pip install bandit && bandit -r application/src
+    - name: Run Checkov
+      uses: bridgecrewio/checkov-action@v12
+      with:
+        directory: infrastructure
+        framework: terraform

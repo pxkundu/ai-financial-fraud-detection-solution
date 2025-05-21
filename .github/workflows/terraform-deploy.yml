@@ -1,0 +1,44 @@
+name: Terraform Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.9.0
+    - name: Terraform Init
+      working-directory: ./infrastructure
+      run: terraform init
+    - name: Terraform Validate
+      working-directory: ./infrastructure
+      run: terraform validate
+    - name: Run Checkov Security Scan
+      uses: bridgecrewio/checkov-action@v12
+      with:
+        directory: infrastructure
+        framework: terraform
+    - name: Terraform Plan
+      working-directory: ./infrastructure
+      run: terraform plan -out=tfplan
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Terraform Apply
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      working-directory: ./infrastructure
+      run: terraform apply -auto-approve tfplan
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -1,0 +1,5 @@
+aws:
+  region: us-east-1
+  ssm_parameter: /fraud-detection/openai-api-key
+openai:
+  api_endpoint: https://api.openai.com/v1/completions

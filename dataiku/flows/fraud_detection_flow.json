@@ -1,0 +1,139 @@
+{
+  "flow": {
+    "name": "fraud_detection_flow",
+    "description": "End-to-end fraud detection pipeline with AWS integration",
+    "stages": [
+      {
+        "name": "data_ingestion",
+        "type": "ingestion",
+        "components": [
+          {
+            "name": "s3_connector",
+            "type": "aws_s3",
+            "config": {
+              "bucket": "${S3_BUCKET_NAME}",
+              "prefix": "raw_transactions/",
+              "format": "csv"
+            }
+          },
+          {
+            "name": "textract_processor",
+            "type": "aws_textract",
+            "config": {
+              "document_types": ["bank_statements", "invoices"],
+              "output_format": "json"
+            }
+          }
+        ]
+      },
+      {
+        "name": "data_preprocessing",
+        "type": "processing",
+        "components": [
+          {
+            "name": "feature_engineering",
+            "type": "python",
+            "script": "feature_engineering.py",
+            "dependencies": ["pandas", "numpy", "scikit-learn"]
+          },
+          {
+            "name": "data_validation",
+            "type": "python",
+            "script": "data_validation.py",
+            "dependencies": ["great-expectations"]
+          }
+        ]
+      },
+      {
+        "name": "model_training",
+        "type": "ml",
+        "components": [
+          {
+            "name": "model_trainer",
+            "type": "python",
+            "script": "model_training.py",
+            "dependencies": ["tensorflow", "scikit-learn", "xgboost"],
+            "config": {
+              "model_type": "xgboost",
+              "hyperparameters": {
+                "max_depth": 6,
+                "learning_rate": 0.1,
+                "n_estimators": 100
+              }
+            }
+          },
+          {
+            "name": "model_evaluation",
+            "type": "python",
+            "script": "model_evaluation.py",
+            "dependencies": ["scikit-learn", "matplotlib"]
+          }
+        ]
+      },
+      {
+        "name": "model_deployment",
+        "type": "deployment",
+        "components": [
+          {
+            "name": "bedrock_integration",
+            "type": "aws_bedrock",
+            "config": {
+              "model_id": "anthropic.claude-v2",
+              "endpoint": "${BEDROCK_ENDPOINT}"
+            }
+          },
+          {
+            "name": "eks_deployment",
+            "type": "kubernetes",
+            "config": {
+              "cluster": "${EKS_CLUSTER_NAME}",
+              "namespace": "fraud-detection",
+              "replicas": 3
+            }
+          }
+        ]
+      },
+      {
+        "name": "monitoring",
+        "type": "monitoring",
+        "components": [
+          {
+            "name": "model_monitoring",
+            "type": "python",
+            "script": "model_monitoring.py",
+            "dependencies": ["prometheus-client", "grafana-api"],
+            "config": {
+              "metrics": ["accuracy", "precision", "recall", "f1_score"],
+              "alert_threshold": 0.95
+            }
+          },
+          {
+            "name": "data_drift_detection",
+            "type": "python",
+            "script": "drift_detection.py",
+            "dependencies": ["alibi-detect"],
+            "config": {
+              "drift_threshold": 0.1,
+              "window_size": 1000
+            }
+          }
+        ]
+      }
+    ],
+    "dependencies": {
+      "python": "3.9",
+      "packages": [
+        "boto3>=1.26.0",
+        "pandas>=1.5.0",
+        "numpy>=1.21.0",
+        "scikit-learn>=1.0.0",
+        "tensorflow>=2.8.0",
+        "xgboost>=1.5.0",
+        "great-expectations>=0.15.0",
+        "prometheus-client>=0.14.0",
+        "grafana-api>=1.0.0",
+        "alibi-detect>=0.9.0"
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+region       = "us-east-1"
+vpc_name     = "fraud-detection-vpc"
+vpc_cidr     = "10.0.0.0/16"
+cluster_name = "fraud-detection-eks"
+bucket_name  = "fraud-detection-data-1747773217"
