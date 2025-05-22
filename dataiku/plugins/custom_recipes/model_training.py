@@ -1,164 +1,127 @@
-import dataiku
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import precision_recall_curve, average_precision_score
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_recall_curve, f1_score, precision_score, recall_score
 import xgboost as xgb
 import lightgbm as lgb
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 import joblib
-import boto3
 import json
 from datetime import datetime
 
 class FraudDetectionModel:
     def __init__(self, model_type='xgboost'):
         self.model_type = model_type
+        self.model = None
+        self.feature_importance = None
         self.models = {
             'xgboost': xgb.XGBClassifier(
                 max_depth=6,
                 learning_rate=0.1,
                 n_estimators=100,
                 objective='binary:logistic',
-                scale_pos_weight=10
+                random_state=42
             ),
             'lightgbm': lgb.LGBMClassifier(
-                num_leaves=31,
+                max_depth=6,
                 learning_rate=0.1,
                 n_estimators=100,
-                class_weight='balanced'
+                objective='binary',
+                random_state=42
             ),
             'random_forest': RandomForestClassifier(
                 n_estimators=100,
-                max_depth=10,
-                class_weight='balanced'
+                max_depth=6,
+                random_state=42
             ),
             'gradient_boosting': GradientBoostingClassifier(
                 n_estimators=100,
+                max_depth=6,
                 learning_rate=0.1,
-                max_depth=6
+                random_state=42
             )
         }
-        self.model = self.models[model_type]
-        self.feature_importance = None
-        self.threshold = None
-
-    def prepare_data(self, df):
-        """Prepare data for training."""
-        # Separate features and target
-        X = df.drop(['is_fraud', 'customer_id', 'timestamp'], axis=1)
-        y = df['is_fraud']
         
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
+    def prepare_data(self, X, y):
+        """Prepare data for training and testing."""
+        return train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    def train(self, X, y):
+        """Train the selected model."""
+        X_train, X_test, y_train, y_test = self.prepare_data(X, y)
         
-        return X_train, X_test, y_train, y_test, X.columns
-
-    def train(self, X_train, y_train):
-        """Train the model."""
+        # Train model
+        self.model = self.models[self.model_type]
         self.model.fit(X_train, y_train)
         
-        # Get feature importance
+        # Get feature importance if available
         if hasattr(self.model, 'feature_importances_'):
-            self.feature_importance = pd.Series(
-                self.model.feature_importances_,
-                index=X_train.columns
-            ).sort_values(ascending=False)
-
-    def evaluate(self, X_test, y_test):
+            self.feature_importance = dict(zip(X.columns, self.model.feature_importances_))
+        
+        return X_test, y_test
+    
+    def evaluate(self, X, y):
         """Evaluate model performance."""
-        # Get predictions
-        y_pred_proba = self.model.predict_proba(X_test)[:, 1]
-        
-        # Calculate precision-recall curve
-        precision, recall, thresholds = precision_recall_curve(y_test, y_pred_proba)
-        
-        # Find optimal threshold
-        f1_scores = 2 * (precision * recall) / (precision + recall)
-        optimal_idx = np.argmax(f1_scores)
-        self.threshold = thresholds[optimal_idx]
+        y_pred = self.model.predict(X)
+        y_pred_proba = self.model.predict_proba(X)[:, 1]
         
         # Calculate metrics
-        y_pred = (y_pred_proba >= self.threshold).astype(int)
+        precision, recall, thresholds = precision_recall_curve(y, y_pred_proba)
+        f1_scores = 2 * (precision * recall) / (precision + recall + 1e-10)
+        optimal_idx = np.argmax(f1_scores)
+        optimal_threshold = thresholds[optimal_idx]
+        
         metrics = {
-            'average_precision': average_precision_score(y_test, y_pred_proba),
-            'optimal_threshold': float(self.threshold),
-            'f1_score': float(f1_scores[optimal_idx])
+            'precision': precision_score(y, y_pred),
+            'recall': recall_score(y, y_pred),
+            'f1_score': f1_score(y, y_pred),
+            'optimal_threshold': float(optimal_threshold)
         }
         
         return metrics
-
-    def save_model(self, model_path, s3_bucket=None):
-        """Save model to local path or S3."""
-        # Save model locally
+    
+    def save_model(self, model_path):
+        """Save model and metadata."""
+        # Save model
         joblib.dump(self.model, model_path)
         
         # Save metadata
         metadata = {
             'model_type': self.model_type,
-            'threshold': self.threshold,
-            'feature_importance': self.feature_importance.to_dict(),
-            'timestamp': datetime.now().isoformat()
+            'feature_importance': self.feature_importance,
+            'training_date': datetime.now().isoformat(),
+            'model_parameters': self.model.get_params()
         }
         
         with open(f"{model_path}_metadata.json", 'w') as f:
-            json.dump(metadata, f)
-        
-        # Upload to S3 if bucket specified
-        if s3_bucket:
-            s3 = boto3.client('s3')
-            s3.upload_file(model_path, s3_bucket, f"models/{model_path}")
-            s3.upload_file(
-                f"{model_path}_metadata.json",
-                s3_bucket,
-                f"models/{model_path}_metadata.json"
-            )
-
-def main():
-    # Get processed dataset
-    input_dataset = dataiku.Dataset("processed_transactions")
-    df = input_dataset.get_dataframe()
-    
-    # Initialize and train models
-    models = {}
-    metrics = {}
-    
-    for model_type in ['xgboost', 'lightgbm', 'random_forest', 'gradient_boosting']:
-        print(f"Training {model_type} model...")
-        
-        # Initialize model
-        model = FraudDetectionModel(model_type=model_type)
-        
-        # Prepare data
-        X_train, X_test, y_train, y_test, feature_names = model.prepare_data(df)
-        
-        # Train model
-        model.train(X_train, y_train)
-        
-        # Evaluate model
-        model_metrics = model.evaluate(X_test, y_test)
-        
-        # Save model
-        model_path = f"fraud_detection_{model_type}.joblib"
-        model.save_model(model_path, s3_bucket="fraud-detection-models")
-        
-        models[model_type] = model
-        metrics[model_type] = model_metrics
-    
-    # Select best model
-    best_model_type = max(metrics, key=lambda x: metrics[x]['f1_score'])
-    best_model = models[best_model_type]
-    
-    print(f"Best model: {best_model_type}")
-    print(f"F1 Score: {metrics[best_model_type]['f1_score']:.4f}")
-    print(f"Average Precision: {metrics[best_model_type]['average_precision']:.4f}")
-    
-    # Save model comparison results
-    comparison_df = pd.DataFrame(metrics).T
-    output_dataset = dataiku.Dataset("model_comparison")
-    output_dataset.write_with_schema(comparison_df)
+            json.dump(metadata, f, indent=2)
 
 if __name__ == "__main__":
-    main() 
+    # Test the model with sample data
+    np.random.seed(42)
+    n_samples = 1000
+    
+    # Generate sample features
+    X = pd.DataFrame({
+        'amount': np.random.lognormal(4, 1, n_samples),
+        'transaction_count_24h': np.random.poisson(5, n_samples),
+        'location_change': np.random.binomial(1, 0.1, n_samples),
+        'device_change': np.random.binomial(1, 0.05, n_samples),
+        'merchant_risk_score': np.random.beta(2, 5, n_samples),
+        'customer_risk_score': np.random.beta(2, 5, n_samples)
+    })
+    
+    # Generate target variable
+    y = np.random.binomial(1, 0.1, n_samples)  # 10% fraud rate
+    
+    # Train and evaluate model
+    model = FraudDetectionModel(model_type='xgboost')
+    X_test, y_test = model.train(X, y)
+    metrics = model.evaluate(X_test, y_test)
+    
+    print("Model performance metrics:")
+    print(json.dumps(metrics, indent=2))
+    
+    # Save model
+    model.save_model('test_model.joblib')
+    print("\nModel saved successfully") 

@@ -1,188 +1,120 @@
-import dataiku
 import pandas as pd
 import numpy as np
-from sklearn.metrics import precision_score, recall_score, f1_score
+from scipy import stats
 import joblib
-import boto3
 import json
-from datetime import datetime, timedelta
-from prometheus_client import start_http_server, Gauge, Counter
-import alibi_detect
-from alibi_detect import drift
+from datetime import datetime
+from sklearn.metrics import precision_score, recall_score, f1_score
 import logging
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ModelMonitor:
-    def __init__(self, model_path, metadata_path, s3_bucket=None):
-        self.model_path = model_path
-        self.metadata_path = metadata_path
-        self.s3_bucket = s3_bucket
-        self.model = None
-        self.metadata = None
-        self.threshold = None
-        self.feature_importance = None
+    def __init__(self, model_path, metadata_path):
+        """Initialize model monitor with trained model and metadata."""
+        self.model = joblib.load(model_path)
+        with open(metadata_path, 'r') as f:
+            self.metadata = json.load(f)
         
-        # Initialize Prometheus metrics
-        self.precision_gauge = Gauge('model_precision', 'Model precision score')
-        self.recall_gauge = Gauge('model_recall', 'Model recall score')
-        self.f1_gauge = Gauge('model_f1', 'Model F1 score')
-        self.drift_score_gauge = Gauge('data_drift_score', 'Data drift score')
-        self.prediction_counter = Counter('model_predictions_total', 'Total number of predictions')
-        self.fraud_counter = Counter('fraud_predictions_total', 'Total number of fraud predictions')
+        self.feature_importance = self.metadata.get('feature_importance', {})
+        self.training_date = self.metadata.get('training_date')
+        self.model_parameters = self.metadata.get('model_parameters', {})
         
-        # Load model and metadata
-        self.load_model()
+        # Initialize drift detection thresholds
+        self.drift_threshold = 0.1
+        self.performance_threshold = 0.8
     
-    def load_model(self):
-        """Load model and metadata from local path or S3."""
-        try:
-            if self.s3_bucket:
-                s3 = boto3.client('s3')
-                s3.download_file(self.s3_bucket, f"models/{self.model_path}", self.model_path)
-                s3.download_file(self.s3_bucket, f"models/{self.metadata_path}", self.metadata_path)
-            
-            self.model = joblib.load(self.model_path)
-            with open(self.metadata_path, 'r') as f:
-                self.metadata = json.load(f)
-            
-            self.threshold = self.metadata['threshold']
-            self.feature_importance = pd.Series(self.metadata['feature_importance'])
-            
-            logger.info(f"Successfully loaded model: {self.metadata['model_type']}")
-        except Exception as e:
-            logger.error(f"Error loading model: {str(e)}")
-            raise
-    
-    def calculate_metrics(self, y_true, y_pred):
-        """Calculate model performance metrics."""
-        metrics = {
-            'precision': precision_score(y_true, y_pred),
-            'recall': recall_score(y_true, y_pred),
-            'f1': f1_score(y_true, y_pred)
-        }
-        
-        # Update Prometheus metrics
-        self.precision_gauge.set(metrics['precision'])
-        self.recall_gauge.set(metrics['recall'])
-        self.f1_gauge.set(metrics['f1'])
-        
-        return metrics
-    
-    def detect_drift(self, reference_data, current_data):
+    def detect_drift(self, X):
         """Detect data drift using Kolmogorov-Smirnov test."""
-        try:
-            # Initialize drift detector
-            detector = drift.KSDrift(
-                reference_data,
-                p_val=0.05,
-                window_size=1000
-            )
-            
-            # Calculate drift score
-            drift_score = detector.score(current_data)
-            
-            # Update Prometheus metric
-            self.drift_score_gauge.set(drift_score)
-            
-            return {
-                'drift_detected': drift_score > 0.05,
-                'drift_score': drift_score
-            }
-        except Exception as e:
-            logger.error(f"Error detecting drift: {str(e)}")
-            return None
-    
-    def monitor_predictions(self, X):
-        """Monitor model predictions in real-time."""
-        try:
-            # Get predictions
-            y_pred_proba = self.model.predict_proba(X)[:, 1]
-            y_pred = (y_pred_proba >= self.threshold).astype(int)
-            
-            # Update prediction counters
-            self.prediction_counter.inc(len(y_pred))
-            self.fraud_counter.inc(sum(y_pred))
-            
-            return y_pred, y_pred_proba
-        except Exception as e:
-            logger.error(f"Error making predictions: {str(e)}")
-            return None, None
-    
-    def save_monitoring_results(self, results):
-        """Save monitoring results to S3."""
-        try:
-            if self.s3_bucket:
-                s3 = boto3.client('s3')
-                
-                # Add timestamp
-                results['timestamp'] = datetime.now().isoformat()
-                
-                # Save results
-                results_path = f"monitoring/results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-                with open(results_path, 'w') as f:
-                    json.dump(results, f)
-                
-                s3.upload_file(results_path, self.s3_bucket, f"monitoring/{results_path}")
-                
-                logger.info(f"Saved monitoring results to S3: {results_path}")
-        except Exception as e:
-            logger.error(f"Error saving monitoring results: {str(e)}")
-
-def main():
-    # Start Prometheus metrics server
-    start_http_server(8000)
-    
-    # Initialize model monitor
-    monitor = ModelMonitor(
-        model_path="fraud_detection_xgboost.joblib",
-        metadata_path="fraud_detection_xgboost.joblib_metadata.json",
-        s3_bucket="fraud-detection-models"
-    )
-    
-    # Get current data
-    current_dataset = dataiku.Dataset("current_transactions")
-    current_df = current_dataset.get_dataframe()
-    
-    # Get reference data
-    reference_dataset = dataiku.Dataset("reference_transactions")
-    reference_df = reference_dataset.get_dataframe()
-    
-    # Monitor predictions
-    y_pred, y_pred_proba = monitor.monitor_predictions(current_df)
-    
-    if y_pred is not None:
-        # Calculate metrics if true labels are available
-        if 'is_fraud' in current_df.columns:
-            metrics = monitor.calculate_metrics(current_df['is_fraud'], y_pred)
-        else:
-            metrics = None
+        drift_metrics = {}
         
-        # Detect drift
-        drift_results = monitor.detect_drift(
-            reference_df.drop(['is_fraud', 'customer_id', 'timestamp'], axis=1),
-            current_df.drop(['customer_id', 'timestamp'], axis=1)
-        )
+        for feature in X.columns:
+            if feature in self.feature_importance:
+                # Get feature distribution from training data
+                train_dist = self.metadata.get('feature_distributions', {}).get(feature, {})
+                
+                if train_dist:
+                    # Perform KS test
+                    ks_stat, p_value = stats.ks_2samp(
+                        train_dist['values'],
+                        X[feature].values
+                    )
+                    
+                    drift_metrics[feature] = {
+                        'ks_statistic': float(ks_stat),
+                        'p_value': float(p_value),
+                        'drift_detected': p_value < self.drift_threshold
+                    }
         
-        # Save monitoring results
-        results = {
-            'metrics': metrics,
-            'drift_results': drift_results,
-            'predictions_count': len(y_pred),
-            'fraud_predictions_count': sum(y_pred)
+        return drift_metrics
+    
+    def monitor_predictions(self, X, y_true=None):
+        """Monitor model predictions and detect drift."""
+        # Get predictions
+        y_pred = self.model.predict(X)
+        y_pred_proba = self.model.predict_proba(X)[:, 1]
+        
+        # Initialize monitoring results
+        monitoring_results = {
+            'timestamp': datetime.now().isoformat(),
+            'drift_metrics': self.detect_drift(X),
+            'prediction_metrics': {}
         }
         
-        monitor.save_monitoring_results(results)
+        # Calculate performance metrics if true labels are provided
+        if y_true is not None:
+            monitoring_results['prediction_metrics'] = {
+                'precision': float(precision_score(y_true, y_pred)),
+                'recall': float(recall_score(y_true, y_pred)),
+                'f1_score': float(f1_score(y_true, y_pred))
+            }
+            
+            # Check if performance has degraded
+            for metric, value in monitoring_results['prediction_metrics'].items():
+                if value < self.performance_threshold:
+                    logger.warning(f"Performance degradation detected in {metric}: {value:.4f}")
         
-        # Log results
-        logger.info("Monitoring Results:")
-        if metrics:
-            logger.info(f"Metrics: {metrics}")
-        logger.info(f"Drift Results: {drift_results}")
-        logger.info(f"Total Predictions: {len(y_pred)}")
-        logger.info(f"Fraud Predictions: {sum(y_pred)}")
+        # Log drift detection results
+        for feature, metrics in monitoring_results['drift_metrics'].items():
+            if metrics['drift_detected']:
+                logger.warning(
+                    f"Data drift detected in feature {feature}: "
+                    f"KS statistic = {metrics['ks_statistic']:.4f}, "
+                    f"p-value = {metrics['p_value']:.4f}"
+                )
+        
+        return monitoring_results
 
 if __name__ == "__main__":
-    main() 
+    # Test the monitor with sample data
+    np.random.seed(42)
+    n_samples = 1000
+    
+    # Generate sample features
+    X = pd.DataFrame({
+        'amount': np.random.lognormal(4, 1, n_samples),
+        'transaction_count_24h': np.random.poisson(5, n_samples),
+        'location_change': np.random.binomial(1, 0.1, n_samples),
+        'device_change': np.random.binomial(1, 0.05, n_samples),
+        'merchant_risk_score': np.random.beta(2, 5, n_samples),
+        'customer_risk_score': np.random.beta(2, 5, n_samples)
+    })
+    
+    # Generate target variable
+    y = np.random.binomial(1, 0.1, n_samples)  # 10% fraud rate
+    
+    # Create sample model and metadata
+    from model_training import FraudDetectionModel
+    model = FraudDetectionModel(model_type='xgboost')
+    X_test, y_test = model.train(X, y)
+    model.save_model('test_model.joblib')
+    
+    # Initialize monitor
+    monitor = ModelMonitor('test_model.joblib', 'test_model.joblib_metadata.json')
+    
+    # Monitor predictions
+    monitoring_results = monitor.monitor_predictions(X_test, y_test)
+    
+    print("Monitoring results:")
+    print(json.dumps(monitoring_results, indent=2)) 

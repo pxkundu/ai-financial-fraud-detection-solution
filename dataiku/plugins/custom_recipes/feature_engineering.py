@@ -1,14 +1,16 @@
-import dataiku
 import pandas as pd
 import numpy as np
+from datetime import datetime
 from sklearn.preprocessing import StandardScaler
-from datetime import datetime, timedelta
 
 def process_transaction_features(df):
-    """Process transaction data and create features for fraud detection."""
+    """Process transaction data and create relevant features."""
+    # Convert timestamp to datetime if it's not already
+    if not isinstance(df['timestamp'].iloc[0], datetime):
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
     
-    # Convert timestamp to datetime
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    # Sort by timestamp to ensure proper rolling window calculations
+    df = df.sort_values(['customer_id', 'timestamp'])
     
     # Time-based features
     df['hour'] = df['timestamp'].dt.hour
@@ -17,37 +19,30 @@ def process_transaction_features(df):
     
     # Transaction amount features
     df['amount_log'] = np.log1p(df['amount'])
-    df['amount_zscore'] = df.groupby('customer_id')['amount'].transform(
-        lambda x: (x - x.mean()) / x.std()
-    )
+    df['amount_zscore'] = (df['amount'] - df['amount'].mean()) / df['amount'].std()
     
-    # Frequency features
-    df['transaction_count_24h'] = df.groupby('customer_id')['timestamp'].transform(
-        lambda x: x.rolling('24H', min_periods=1).count()
-    )
+    # Frequency features - using a fixed window size instead of time-based
+    df['transaction_count_24h'] = df.groupby('customer_id').rolling(
+        window=24, min_periods=1
+    )['timestamp'].count().reset_index(level=0, drop=True)
     
-    # Velocity features
-    df['amount_velocity_24h'] = df.groupby('customer_id')['amount'].transform(
-        lambda x: x.rolling('24H', min_periods=1).sum()
-    )
+    # Velocity features - using a fixed window size
+    df['amount_sum_24h'] = df.groupby('customer_id').rolling(
+        window=24, min_periods=1
+    )['amount'].sum().reset_index(level=0, drop=True)
     
-    # Location-based features
+    # Location and device features
     df['location_change'] = df.groupby('customer_id')['location'].transform(
         lambda x: x != x.shift()
     ).astype(int)
     
-    # Device-based features
-    df['new_device'] = df.groupby('customer_id')['device_id'].transform(
+    df['device_change'] = df.groupby('customer_id')['device_id'].transform(
         lambda x: x != x.shift()
     ).astype(int)
     
-    # Merchant-based features
-    merchant_risk = df.groupby('merchant_id')['is_fraud'].mean()
-    df['merchant_risk_score'] = df['merchant_id'].map(merchant_risk)
-    
-    # Customer-based features
-    customer_risk = df.groupby('customer_id')['is_fraud'].mean()
-    df['customer_risk_score'] = df['customer_id'].map(customer_risk)
+    # Risk scores
+    df['merchant_risk_score'] = df.groupby('merchant_id')['is_fraud'].transform('mean')
+    df['customer_risk_score'] = df.groupby('customer_id')['is_fraud'].transform('mean')
     
     # Time since last transaction
     df['time_since_last_tx'] = df.groupby('customer_id')['timestamp'].transform(
@@ -55,53 +50,43 @@ def process_transaction_features(df):
     )
     
     # Amount ratio to average
-    df['amount_ratio_to_avg'] = df.groupby('customer_id').apply(
-        lambda x: x['amount'] / x['amount'].mean()
-    ).reset_index(level=0, drop=True)
+    df['amount_ratio_to_avg'] = df['amount'] / df.groupby('customer_id')['amount'].transform('mean')
     
     return df
 
 def compute_aggregate_features(df, window='24H'):
     """Compute aggregate features over a time window."""
-    
+    # Simple aggregation by customer_id
     agg_features = df.groupby('customer_id').agg({
         'amount': ['mean', 'std', 'min', 'max', 'sum'],
-        'transaction_count_24h': 'max',
+        'transaction_count_24h': 'mean',
         'location_change': 'sum',
-        'new_device': 'sum'
+        'device_change': 'sum',
+        'is_fraud': 'mean'
     }).reset_index()
     
-    agg_features.columns = ['customer_id'] + [f'{col[0]}_{col[1]}' for col in agg_features.columns[1:]]
+    # Flatten column names
+    agg_features.columns = ['_'.join(col).strip() for col in agg_features.columns.values]
     
     return agg_features
 
-def main():
-    # Get input dataset
-    input_dataset = dataiku.Dataset("transactions")
-    df = input_dataset.get_dataframe()
-    
-    # Process features
-    df_processed = process_transaction_features(df)
-    
-    # Compute aggregate features
-    agg_features = compute_aggregate_features(df_processed)
-    
-    # Merge features
-    final_df = pd.merge(df_processed, agg_features, on='customer_id', how='left')
-    
-    # Scale numerical features
-    scaler = StandardScaler()
-    numerical_cols = [
-        'amount', 'amount_log', 'amount_zscore', 'transaction_count_24h',
-        'amount_velocity_24h', 'merchant_risk_score', 'customer_risk_score',
-        'time_since_last_tx', 'amount_ratio_to_avg'
-    ]
-    
-    final_df[numerical_cols] = scaler.fit_transform(final_df[numerical_cols])
-    
-    # Save processed dataset
-    output_dataset = dataiku.Dataset("processed_transactions")
-    output_dataset.write_with_schema(final_df)
-
 if __name__ == "__main__":
-    main() 
+    # Test the functions with sample data
+    test_data = pd.DataFrame({
+        'transaction_id': ['TX001', 'TX002', 'TX003'],
+        'timestamp': pd.date_range(start='2024-01-01', periods=3, freq='H'),
+        'customer_id': ['CUST001', 'CUST001', 'CUST002'],
+        'merchant_id': ['MERCH001', 'MERCH002', 'MERCH001'],
+        'amount': [100, 200, 150],
+        'location': ['LOC001', 'LOC002', 'LOC001'],
+        'device_id': ['DEV001', 'DEV001', 'DEV002'],
+        'is_fraud': [0, 1, 0]
+    })
+    
+    processed_data = process_transaction_features(test_data)
+    print("Processed features shape:", processed_data.shape)
+    print("\nProcessed features columns:", processed_data.columns.tolist())
+    
+    aggregate_data = compute_aggregate_features(processed_data)
+    print("\nAggregate features shape:", aggregate_data.shape)
+    print("\nAggregate features columns:", aggregate_data.columns.tolist()) 
