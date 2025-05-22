@@ -1,17 +1,78 @@
 # AI-Powered Financial Fraud Detection Solution
 
 ## Overview
-This project implements an end-to-end AI-powered financial fraud detection system that leverages machine learning to identify and prevent fraudulent transactions in real-time. The solution is designed to be scalable, maintainable, and easily deployable in cloud environments.
+This project implements an end-to-end AI-powered financial fraud detection system that leverages both traditional machine learning and advanced Large Language Models (LLMs) to identify and prevent fraudulent transactions in real-time. The solution combines the power of OpenAI's GPT models with traditional ML approaches to provide comprehensive fraud detection capabilities.
 
 ## Key Features
 - Real-time transaction monitoring and fraud detection
 - Advanced feature engineering for fraud pattern recognition
 - Multiple ML model support (XGBoost, LightGBM, Random Forest)
+- LLM-powered transaction analysis and anomaly detection
+- Natural language processing for fraud pattern identification
+- Automated fraud investigation and reporting
 - Model monitoring and drift detection
-- Automated model retraining pipeline
 - Cloud-native architecture with AWS integration
 - Comprehensive logging and monitoring
 - RESTful API for integration
+
+## AI/LLM Integration
+
+### OpenAI Integration
+- **Transaction Analysis**:
+  - Natural language understanding of transaction descriptions
+  - Pattern recognition in merchant names and locations
+  - Contextual analysis of transaction sequences
+  - Anomaly detection in transaction narratives
+
+- **Fraud Investigation**:
+  - Automated report generation
+  - Natural language explanations of fraud alerts
+  - Historical pattern analysis
+  - Risk assessment summaries
+
+- **Customer Communication**:
+  - Automated fraud alert notifications
+  - Natural language responses to customer queries
+  - Personalized security recommendations
+  - Multi-language support
+
+### LLM Capabilities
+- **Transaction Classification**:
+  - Categorization of transactions using natural language
+  - Identification of suspicious patterns
+  - Context-aware risk assessment
+  - Behavioral pattern recognition
+
+- **Document Analysis**:
+  - Processing of financial documents
+  - Extraction of relevant information
+  - Verification of document authenticity
+  - Cross-reference with transaction data
+
+- **Risk Assessment**:
+  - Natural language risk scoring
+  - Contextual analysis of customer behavior
+  - Historical pattern matching
+  - Real-time risk level adjustment
+
+### Integration Architecture
+- **API Layer**:
+  - OpenAI API integration
+  - Rate limiting and cost management
+  - Response caching
+  - Fallback mechanisms
+
+- **Processing Pipeline**:
+  - Text preprocessing
+  - Context enrichment
+  - Response validation
+  - Result aggregation
+
+- **Security Measures**:
+  - Data encryption
+  - PII handling
+  - Access control
+  - Audit logging
 
 ## Core Components
 
@@ -132,6 +193,7 @@ The project leverages Dataiku DSS for data processing and model development:
 ## Prerequisites
 - Python 3.8+
 - AWS Account with appropriate permissions
+- OpenAI API key
 - Terraform 1.0+
 - Docker
 - Dataiku DSS (optional, for development)
@@ -155,7 +217,16 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Set up AWS credentials:
+4. Set up environment variables:
+```bash
+# Create .env file
+cp .env.example .env
+
+# Add your OpenAI API key
+echo "OPENAI_API_KEY=your_api_key_here" >> .env
+```
+
+5. Set up AWS credentials:
 ```bash
 aws configure
 ```
@@ -165,10 +236,19 @@ aws configure
 ### Running the Application
 1. Start the API server:
 ```bash
-python application/api/main.py
+python application/src/main.py
 ```
 
 2. Access the API documentation at `http://localhost:8000/docs`
+
+### Testing LLM Integration
+```bash
+# Test OpenAI integration
+python tests/test_llm_integration.py
+
+# Test fraud detection with LLM
+python tests/test_fraud_detection.py
+```
 
 ### Running Tests
 ```bash
