@@ -1,0 +1,62 @@
+name: Dataiku Test and Plot Generation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'dataiku/**'
+      - '.github/workflows/dataiku-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'dataiku/**'
+      - '.github/workflows/dataiku-test.yml'
+
+jobs:
+  test-and-plot:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r dataiku/requirements.txt
+        pip install pytest pytest-html
+        
+    - name: Run Dataiku tests
+      run: |
+        cd dataiku
+        pytest tests/ --html=test-report.html
+        
+    - name: Generate plots
+      run: |
+        cd dataiku
+        python scripts/generate_plots.py
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          dataiku/test-report.html
+          dataiku/plots/
+          
+    - name: Prepare GitHub Pages
+      run: |
+        mkdir -p docs/dataiku
+        cp dataiku/test-report.html docs/dataiku/
+        cp -r dataiku/plots/* docs/dataiku/
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs
+        publish_branch: gh-pages 
