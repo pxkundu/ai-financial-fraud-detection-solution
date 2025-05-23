@@ -12,12 +12,17 @@ on:
       - 'dataiku/**'
       - '.github/workflows/dataiku-test.yml'
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   test-and-plot:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -41,7 +46,7 @@ jobs:
         python scripts/generate_plots.py
         
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results
         path: |
@@ -59,4 +64,5 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs
-        publish_branch: gh-pages 
+        publish_branch: gh-pages
+        commit_message: "Deploy Dataiku module dashboard" 
