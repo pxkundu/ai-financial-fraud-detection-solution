@@ -57,6 +57,7 @@ jobs:
           
     - name: Prepare GitHub Pages
       run: |
+        # Create docs directory and copy plots
         mkdir -p docs
         cp -r dataiku/plots/* docs/
         
@@ -67,6 +68,7 @@ jobs:
           cd ..
         fi
         
+        # Update index.html with test results
         cd dataiku
         python scripts/update_index.py
         
@@ -83,10 +85,15 @@ jobs:
           exit 1
         fi
         
-        # Verify plots
+        # Verify plots exist and are accessible
         for plot in amount_distribution.png time_features.png risk_scores.png customer_statistics.png; do
           if [ ! -f "../docs/$plot" ]; then
             echo "Error: Required plot $plot is missing"
+            exit 1
+          fi
+          # Verify plot is readable
+          if ! file "../docs/$plot" | grep -q "PNG image"; then
+            echo "Error: Plot $plot is not a valid PNG file"
             exit 1
           fi
         done

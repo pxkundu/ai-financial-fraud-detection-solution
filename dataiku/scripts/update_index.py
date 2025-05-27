@@ -1,5 +1,6 @@
 import markdown2
 import os
+import re
 
 def update_index():
     # Read the test output markdown
@@ -8,6 +9,13 @@ def update_index():
     
     # Convert markdown to HTML
     html_content = markdown2.markdown(md_content, extras=['tables', 'fenced-code-blocks'])
+    
+    # Fix image paths to be relative to the deployed site
+    html_content = re.sub(
+        r'src="dataiku/plots/([^"]+)"',
+        r'src="\1"',
+        html_content
+    )
     
     # Append to index.html
     with open('../docs/index.html', 'a') as f:
