@@ -36,6 +36,8 @@ jobs:
         pip install pytest pytest-html
         pip install markdown2
         pip install boto3==1.26.0
+        pip install requests
+        pip install pyyaml
         pip install -r application/requirements.txt
         
     - name: Run Dataiku tests
@@ -64,10 +66,46 @@ jobs:
         cd dataiku
         python scripts/update_index.py
         
+        # Verify the generated files
+        echo "Verifying generated files..."
+        if [ ! -f "../docs/index.html" ]; then
+          echo "Error: index.html was not generated"
+          exit 1
+        fi
+        
+        # Verify test output content
+        if ! grep -q "Feature Engineering Test Results" "../docs/index.html"; then
+          echo "Error: Test output content not found in index.html"
+          exit 1
+        fi
+        
+        # Verify plots
+        for plot in amount_distribution.png time_features.png risk_scores.png customer_statistics.png; do
+          if [ ! -f "../docs/$plot" ]; then
+            echo "Error: Required plot $plot is missing"
+            exit 1
+          fi
+        done
+        
+        echo "All verifications passed successfully"
+        
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs
         publish_branch: gh-pages
-        commit_message: "Update Dataiku test results" 
+        commit_message: "Update Dataiku test results"
+        
+    - name: Verify Deployment
+      run: |
+        echo "Waiting for GitHub Pages deployment..."
+        sleep 30  # Give some time for the deployment to complete
+        
+        # Check if the page is accessible
+        if ! curl -s -f "https://pxkundu.github.io/ai-financial-fraud-detection-solution/" > /dev/null; then
+          echo "Error: GitHub Pages site is not accessible"
+          exit 1
+        fi
+        
+        echo "GitHub Pages deployment verified successfully" 
