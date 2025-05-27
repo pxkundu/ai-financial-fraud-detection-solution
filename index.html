@@ -90,3 +90,428 @@
     </script>
 </body>
 </html> 
+
+## Feature Engineering Test Results
+
+<h1>Feature Engineering Test Output</h1>
+
+<h2>Test Results</h2>
+
+<pre><code>
+=== Testing Feature Engineering ===
+Generated 1000 test transactions
+Number of unique customers: 99
+Number of unique merchants: 49
+Fraud rate: 10.40%
+
+Processed features shape: (1000, 21)
+
+=== Feature Validation ===
+WARNING: Missing values found:
+time_since_last_tx    99
+dtype: int64
+✓ No infinite values found
+✓ No negative amounts found
+
+Top 5 features correlated with fraud:
+customer_risk_score    0.349778
+merchant_risk_score    0.190831
+time_since_last_tx     0.100273
+amount_log             0.060882
+amount_zscore          0.044895
+Name: is_fraud, dtype: float64
+
+=== Feature Distributions ===
+
+=== Detailed Statistics ===
+
+Amount Statistics:
+            amount   amount_log  amount_zscore
+count  1000.000000  1000.000000   1.000000e+03
+mean     89.250324     4.027851   6.572520e-17
+std     111.907198     0.963349   1.000000e+00
+min       3.039609     1.396148  -7.703769e-01
+25%      27.441741     3.347858  -5.523200e-01
+50%      55.865685     4.040667  -2.983243e-01
+75%     105.009780     4.663530   1.408261e-01
+max    1058.925879     6.965954   8.664997e+00
+
+Time-based Statistics:
+              hour  day_of_week   is_weekend
+count  1000.000000  1000.000000  1000.000000
+mean     11.524000     3.016000     0.288000
+std       6.945046     2.000937     0.453058
+min       0.000000     0.000000     0.000000
+25%       5.000000     1.000000     0.000000
+50%      12.000000     3.000000     0.000000
+75%      18.000000     5.000000     1.000000
+max      23.000000     6.000000     1.000000
+
+Behavioral Statistics:
+       merchant_risk_score  customer_risk_score  location_change  device_change
+count          1000.000000          1000.000000       1000.00000    1000.000000
+mean              0.104000             0.104000          0.95400       0.880000
+std               0.058282             0.106827          0.20959       0.325124
+min               0.000000             0.000000          0.00000       0.000000
+25%               0.058824             0.000000          1.00000       1.000000
+50%               0.100000             0.083333          1.00000       1.000000
+75%               0.136364             0.150000          1.00000       1.000000
+max               0.266667             0.666667          1.00000       1.000000
+
+Aggregate features shape: (99, 10)
+
+Customer-level Statistics:
+       amount_mean  amount_std  amount_min  ...  location_change_sum  device_change_sum  is_fraud_mean
+count    99.000000   99.000000   99.000000  ...            99.000000          99.000000      99.000000
+mean     88.401804   92.551340   13.610814  ...             9.636364           8.888889       0.110756
+std      31.784757   60.304129    7.742036  ...             3.366869           2.989399       0.122220
+min      33.816209   21.438734    3.039609  ...             3.000000           3.000000       0.000000
+25%      66.428293   50.630735    8.063884  ...             7.000000           7.000000       0.000000
+50%      82.093263   74.694203   11.708716  ...             9.000000           9.000000       0.083333
+75%     106.042447  106.044281   17.700552  ...            12.000000          11.000000       0.174242
+max     198.374244  297.537311   46.462040  ...            19.000000          19.000000       0.666667
+
+[8 rows x 9 columns]
+
+Test completed successfully!
+
+Plots have been saved to: /home/artha_undu/aws-repo/ai-financial-fraud-detection-solution/dataiku/plots
+
+</code></pre>
+
+<h2>Generated Plots</h2>
+
+<p>The following plots were generated during the test:
+1. <code>amount_distribution.png</code> - Transaction amount distribution by fraud status
+2. <code>time_features.png</code> - Time-based feature distributions
+3. <code>risk_scores.png</code> - Risk score distributions
+4. <code>customer_statistics.png</code> - Customer-level statistics</p>
+
+<h2>Test Summary</h2>
+
+<ul>
+<li>Number of transactions processed: 1000</li>
+<li>Number of unique customers: 99</li>
+<li>Number of features generated: 21</li>
+<li>Number of aggregate features: 10</li>
+<li>Fraud rate in test data: 10.40%</li>
+</ul>
+
+<h2>Feature Statistics</h2>
+
+<h3>Amount Features</h3>
+
+<table>
+<thead>
+<tr>
+  <th style="text-align:left;"></th>
+  <th style="text-align:right;">amount</th>
+  <th style="text-align:right;">amount_log</th>
+  <th style="text-align:right;">amount_zscore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left;">count</td>
+  <td style="text-align:right;">1000</td>
+  <td style="text-align:right;">1000</td>
+  <td style="text-align:right;">1000</td>
+</tr>
+<tr>
+  <td style="text-align:left;">mean</td>
+  <td style="text-align:right;">89.2503</td>
+  <td style="text-align:right;">4.02785</td>
+  <td style="text-align:right;">6.57252e-17</td>
+</tr>
+<tr>
+  <td style="text-align:left;">std</td>
+  <td style="text-align:right;">111.907</td>
+  <td style="text-align:right;">0.963349</td>
+  <td style="text-align:right;">1</td>
+</tr>
+<tr>
+  <td style="text-align:left;">min</td>
+  <td style="text-align:right;">3.03961</td>
+  <td style="text-align:right;">1.39615</td>
+  <td style="text-align:right;">-0.770377</td>
+</tr>
+<tr>
+  <td style="text-align:left;">25%</td>
+  <td style="text-align:right;">27.4417</td>
+  <td style="text-align:right;">3.34786</td>
+  <td style="text-align:right;">-0.55232</td>
+</tr>
+<tr>
+  <td style="text-align:left;">50%</td>
+  <td style="text-align:right;">55.8657</td>
+  <td style="text-align:right;">4.04067</td>
+  <td style="text-align:right;">-0.298324</td>
+</tr>
+<tr>
+  <td style="text-align:left;">75%</td>
+  <td style="text-align:right;">105.01</td>
+  <td style="text-align:right;">4.66353</td>
+  <td style="text-align:right;">0.140826</td>
+</tr>
+<tr>
+  <td style="text-align:left;">max</td>
+  <td style="text-align:right;">1058.93</td>
+  <td style="text-align:right;">6.96595</td>
+  <td style="text-align:right;">8.665</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Time Features</h3>
+
+<table>
+<thead>
+<tr>
+  <th style="text-align:left;"></th>
+  <th style="text-align:right;">hour</th>
+  <th style="text-align:right;">day<em>of</em>week</th>
+  <th style="text-align:right;">is_weekend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left;">count</td>
+  <td style="text-align:right;">1000</td>
+  <td style="text-align:right;">1000</td>
+  <td style="text-align:right;">1000</td>
+</tr>
+<tr>
+  <td style="text-align:left;">mean</td>
+  <td style="text-align:right;">11.524</td>
+  <td style="text-align:right;">3.016</td>
+  <td style="text-align:right;">0.288</td>
+</tr>
+<tr>
+  <td style="text-align:left;">std</td>
+  <td style="text-align:right;">6.94505</td>
+  <td style="text-align:right;">2.00094</td>
+  <td style="text-align:right;">0.453058</td>
+</tr>
+<tr>
+  <td style="text-align:left;">min</td>
+  <td style="text-align:right;">0</td>
+  <td style="text-align:right;">0</td>
+  <td style="text-align:right;">0</td>
+</tr>
+<tr>
+  <td style="text-align:left;">25%</td>
+  <td style="text-align:right;">5</td>
+  <td style="text-align:right;">1</td>
+  <td style="text-align:right;">0</td>
+</tr>
+<tr>
+  <td style="text-align:left;">50%</td>
+  <td style="text-align:right;">12</td>
+  <td style="text-align:right;">3</td>
+  <td style="text-align:right;">0</td>
+</tr>
+<tr>
+  <td style="text-align:left;">75%</td>
+  <td style="text-align:right;">18</td>
+  <td style="text-align:right;">5</td>
+  <td style="text-align:right;">1</td>
+</tr>
+<tr>
+  <td style="text-align:left;">max</td>
+  <td style="text-align:right;">23</td>
+  <td style="text-align:right;">6</td>
+  <td style="text-align:right;">1</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Behavioral Features</h3>
+
+<table>
+<thead>
+<tr>
+  <th style="text-align:left;"></th>
+  <th style="text-align:right;">merchant<em>risk</em>score</th>
+  <th style="text-align:right;">customer<em>risk</em>score</th>
+  <th style="text-align:right;">location_change</th>
+  <th style="text-align:right;">device_change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left;">count</td>
+  <td style="text-align:right;">1000</td>
+  <td style="text-align:right;">1000</td>
+  <td style="text-align:right;">1000</td>
+  <td style="text-align:right;">1000</td>
+</tr>
+<tr>
+  <td style="text-align:left;">mean</td>
+  <td style="text-align:right;">0.104</td>
+  <td style="text-align:right;">0.104</td>
+  <td style="text-align:right;">0.954</td>
+  <td style="text-align:right;">0.88</td>
+</tr>
+<tr>
+  <td style="text-align:left;">std</td>
+  <td style="text-align:right;">0.0582823</td>
+  <td style="text-align:right;">0.106827</td>
+  <td style="text-align:right;">0.20959</td>
+  <td style="text-align:right;">0.325124</td>
+</tr>
+<tr>
+  <td style="text-align:left;">min</td>
+  <td style="text-align:right;">0</td>
+  <td style="text-align:right;">0</td>
+  <td style="text-align:right;">0</td>
+  <td style="text-align:right;">0</td>
+</tr>
+<tr>
+  <td style="text-align:left;">25%</td>
+  <td style="text-align:right;">0.0588235</td>
+  <td style="text-align:right;">0</td>
+  <td style="text-align:right;">1</td>
+  <td style="text-align:right;">1</td>
+</tr>
+<tr>
+  <td style="text-align:left;">50%</td>
+  <td style="text-align:right;">0.1</td>
+  <td style="text-align:right;">0.0833333</td>
+  <td style="text-align:right;">1</td>
+  <td style="text-align:right;">1</td>
+</tr>
+<tr>
+  <td style="text-align:left;">75%</td>
+  <td style="text-align:right;">0.136364</td>
+  <td style="text-align:right;">0.15</td>
+  <td style="text-align:right;">1</td>
+  <td style="text-align:right;">1</td>
+</tr>
+<tr>
+  <td style="text-align:left;">max</td>
+  <td style="text-align:right;">0.266667</td>
+  <td style="text-align:right;">0.666667</td>
+  <td style="text-align:right;">1</td>
+  <td style="text-align:right;">1</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Customer-Level Aggregates</h3>
+
+<table>
+<thead>
+<tr>
+  <th style="text-align:left;"></th>
+  <th style="text-align:right;">amount_mean</th>
+  <th style="text-align:right;">amount_std</th>
+  <th style="text-align:right;">amount_min</th>
+  <th style="text-align:right;">amount_max</th>
+  <th style="text-align:right;">amount_sum</th>
+  <th style="text-align:right;">transaction<em>count</em>24h_mean</th>
+  <th style="text-align:right;">location<em>change</em>sum</th>
+  <th style="text-align:right;">device<em>change</em>sum</th>
+  <th style="text-align:right;">is<em>fraud</em>mean</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left;">count</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+  <td style="text-align:right;">99</td>
+</tr>
+<tr>
+  <td style="text-align:left;">mean</td>
+  <td style="text-align:right;">88.4018</td>
+  <td style="text-align:right;">92.5513</td>
+  <td style="text-align:right;">13.6108</td>
+  <td style="text-align:right;">303.328</td>
+  <td style="text-align:right;">901.518</td>
+  <td style="text-align:right;">5.55051</td>
+  <td style="text-align:right;">9.63636</td>
+  <td style="text-align:right;">8.88889</td>
+  <td style="text-align:right;">0.110756</td>
+</tr>
+<tr>
+  <td style="text-align:left;">std</td>
+  <td style="text-align:right;">31.7848</td>
+  <td style="text-align:right;">60.3041</td>
+  <td style="text-align:right;">7.74204</td>
+  <td style="text-align:right;">209.732</td>
+  <td style="text-align:right;">459.384</td>
+  <td style="text-align:right;">1.68501</td>
+  <td style="text-align:right;">3.36687</td>
+  <td style="text-align:right;">2.9894</td>
+  <td style="text-align:right;">0.12222</td>
+</tr>
+<tr>
+  <td style="text-align:left;">min</td>
+  <td style="text-align:right;">33.8162</td>
+  <td style="text-align:right;">21.4387</td>
+  <td style="text-align:right;">3.03961</td>
+  <td style="text-align:right;">60.1255</td>
+  <td style="text-align:right;">135.265</td>
+  <td style="text-align:right;">2</td>
+  <td style="text-align:right;">3</td>
+  <td style="text-align:right;">3</td>
+  <td style="text-align:right;">0</td>
+</tr>
+<tr>
+  <td style="text-align:left;">25%</td>
+  <td style="text-align:right;">66.4283</td>
+  <td style="text-align:right;">50.6307</td>
+  <td style="text-align:right;">8.06388</td>
+  <td style="text-align:right;">165.349</td>
+  <td style="text-align:right;">594.125</td>
+  <td style="text-align:right;">4.5</td>
+  <td style="text-align:right;">7</td>
+  <td style="text-align:right;">7</td>
+  <td style="text-align:right;">0</td>
+</tr>
+<tr>
+  <td style="text-align:left;">50%</td>
+  <td style="text-align:right;">82.0933</td>
+  <td style="text-align:right;">74.6942</td>
+  <td style="text-align:right;">11.7087</td>
+  <td style="text-align:right;">233.881</td>
+  <td style="text-align:right;">790.039</td>
+  <td style="text-align:right;">5.5</td>
+  <td style="text-align:right;">9</td>
+  <td style="text-align:right;">9</td>
+  <td style="text-align:right;">0.0833333</td>
+</tr>
+<tr>
+  <td style="text-align:left;">75%</td>
+  <td style="text-align:right;">106.042</td>
+  <td style="text-align:right;">106.044</td>
+  <td style="text-align:right;">17.7006</td>
+  <td style="text-align:right;">348.625</td>
+  <td style="text-align:right;">1113.11</td>
+  <td style="text-align:right;">6.5</td>
+  <td style="text-align:right;">12</td>
+  <td style="text-align:right;">11</td>
+  <td style="text-align:right;">0.174242</td>
+</tr>
+<tr>
+  <td style="text-align:left;">max</td>
+  <td style="text-align:right;">198.374</td>
+  <td style="text-align:right;">297.537</td>
+  <td style="text-align:right;">46.462</td>
+  <td style="text-align:right;">1058.93</td>
+  <td style="text-align:right;">2602.44</td>
+  <td style="text-align:right;">10.5</td>
+  <td style="text-align:right;">19</td>
+  <td style="text-align:right;">19</td>
+  <td style="text-align:right;">0.666667</td>
+</tr>
+</tbody>
+</table>
+
+</div></div></div></body></html>
