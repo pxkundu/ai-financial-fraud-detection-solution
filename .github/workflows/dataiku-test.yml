@@ -57,42 +57,38 @@ jobs:
           
     - name: Prepare GitHub Pages
       run: |
-        # Create docs directory and copy plots
+        # Clean up old index.html and copy plots
         mkdir -p docs
+        rm -f docs/index.html
         cp -r dataiku/plots/* docs/
-        
-        # Create initial index.html if it doesn't exist
-        if [ ! -f "docs/index.html" ]; then
-          cd dataiku
-          python scripts/create_initial_html.py
-          cd ..
-        fi
-        
-        # Update index.html with test results
+
+        # Always create a fresh index.html and update it
         cd dataiku
+        python scripts/create_initial_html.py
         python scripts/update_index.py
-        
+        cd ..
+
         # Verify the generated files
         echo "Verifying generated files..."
-        if [ ! -f "../docs/index.html" ]; then
+        if [ ! -f "docs/index.html" ]; then
           echo "Error: index.html was not generated"
           exit 1
         fi
         
         # Verify test output content
-        if ! grep -q "Feature Engineering Test Results" "../docs/index.html"; then
+        if ! grep -q "Feature Engineering Test Results" "docs/index.html"; then
           echo "Error: Test output content not found in index.html"
           exit 1
         fi
         
         # Verify plots exist and are accessible
         for plot in amount_distribution.png time_features.png risk_scores.png customer_statistics.png; do
-          if [ ! -f "../docs/$plot" ]; then
+          if [ ! -f "docs/$plot" ]; then
             echo "Error: Required plot $plot is missing"
             exit 1
           fi
           # Verify plot is readable
-          if ! file "../docs/$plot" | grep -q "PNG image"; then
+          if ! file "docs/$plot" | grep -q "PNG image"; then
             echo "Error: Plot $plot is not a valid PNG file"
             exit 1
           fi
