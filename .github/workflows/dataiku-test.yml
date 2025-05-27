@@ -57,11 +57,10 @@ jobs:
           
     - name: Prepare GitHub Pages
       run: |
-        mkdir -p docs/dataiku
-        cp dataiku/test-report.html docs/dataiku/
-        cp -r dataiku/plots/* docs/dataiku/
+        mkdir -p docs
+        cp -r dataiku/plots/* docs/
         cd dataiku
-        python scripts/generate_page.py
+        python scripts/update_index.py
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
@@ -69,4 +68,4 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs
         publish_branch: gh-pages
-        commit_message: "Deploy Dataiku module dashboard" 
+        commit_message: "Update Dataiku test results" 
