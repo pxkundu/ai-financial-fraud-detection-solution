@@ -349,3 +349,19 @@ For support, please open an issue in the GitHub repository or contact the mainta
 - Dataiku for DSS integration
 - Open source ML libraries
 - Contributors and maintainers
+
+## Test Output
+
+The following plots were generated during the Dataiku feature engineering tests:
+
+### Transaction Amount Distribution
+![Transaction Amount Distribution](dataiku/plots/amount_distribution.png)
+
+### Time-based Features
+![Time-based Features](dataiku/plots/time_features.png)
+
+### Risk Score Distribution
+![Risk Score Distribution](dataiku/plots/risk_scores.png)
+
+### Customer Statistics
+![Customer Statistics](dataiku/plots/customer_statistics.png)

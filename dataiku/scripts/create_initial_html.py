@@ -21,20 +21,7 @@ def create_initial_html():
         <h1>AI Financial Fraud Detection</h1>
         <div class="row">
             <div class="col-md-8">
-                <div id="content">
-                    <h2>Generated Plots</h2>
-                    <div class="plot-container">
-                        <img src="amount_distribution.png" alt="Transaction amount distribution by fraud status">
-                    </div>
-                    <div class="plot-container">
-                        <img src="time_features.png" alt="Time-based feature distributions">
-                    </div>
-                    <div class="plot-container">
-                        <img src="risk_scores.png" alt="Risk score distributions">
-                    </div>
-                    <div class="plot-container">
-                        <img src="customer_statistics.png" alt="Customer-level statistics">
-                    </div>'''
+                <div id="content">'''
 
     os.makedirs('../docs', exist_ok=True)
     with open('../docs/index.html', 'w') as f:
