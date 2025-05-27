@@ -35,6 +35,8 @@ jobs:
         pip install -r dataiku/requirements.txt
         pip install pytest pytest-html
         pip install markdown2
+        pip install boto3==1.26.0
+        pip install -r application/requirements.txt
         
     - name: Run Dataiku tests
       run: |
