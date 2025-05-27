@@ -40,6 +40,13 @@ jobs:
         pip install pyyaml
         pip install -r application/requirements.txt
         
+    - name: Run application tests
+      run: |
+        # Add the project root to PYTHONPATH
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        cd application
+        python -m unittest discover tests
+        
     - name: Run Dataiku tests
       run: |
         cd dataiku
