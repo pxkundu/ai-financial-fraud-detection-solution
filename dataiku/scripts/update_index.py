@@ -20,9 +20,9 @@ def update_index():
     
     # Append to index.html
     with open('../docs/index.html', 'a') as f:
-        f.write('\n\n## Feature Engineering Test Results\n\n')
+        f.write('\n<h2>Feature Engineering Test Results</h2>\n')
         f.write(html_content)
-        f.write('\n</div></div></div></body></html>')
+        f.write('\n</div>\n</body>\n</html>')
 
 if __name__ == '__main__':
     update_index() 
