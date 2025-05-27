@@ -19,6 +19,25 @@ def create_initial_html():
 <body>
     <div class="container">
         <h1>AI Financial Fraud Detection</h1>
+        
+        <h2>Generated Plots</h2>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="plot-container">
+                    <img src="amount_distribution.png" alt="Transaction amount distribution by fraud status" class="img-fluid">
+                </div>
+                <div class="plot-container">
+                    <img src="time_features.png" alt="Time-based feature distributions" class="img-fluid">
+                </div>
+                <div class="plot-container">
+                    <img src="risk_scores.png" alt="Risk score distributions" class="img-fluid">
+                </div>
+                <div class="plot-container">
+                    <img src="customer_statistics.png" alt="Customer-level statistics" class="img-fluid">
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-8">
                 <div id="content">'''

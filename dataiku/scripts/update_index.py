@@ -10,11 +10,12 @@ def update_index():
     # Convert markdown to HTML
     html_content = markdown2.markdown(md_content, extras=['tables', 'fenced-code-blocks'])
     
-    # Fix image paths to be relative to the deployed site
+    # Remove the "Generated Plots" section from the markdown content
     html_content = re.sub(
-        r'src="dataiku/plots/([^"]+)"',
-        r'src="\1"',
-        html_content
+        r'<h2>Generated Plots</h2>.*?<h2>Test Summary</h2>',
+        '<h2>Test Summary</h2>',
+        html_content,
+        flags=re.DOTALL
     )
     
     # Append to index.html
