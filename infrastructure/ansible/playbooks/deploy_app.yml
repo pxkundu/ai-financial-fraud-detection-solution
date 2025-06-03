@@ -1,0 +1,44 @@
+---
+- name: Deploy Application with Terraform Integration
+  hosts: eks_nodes
+  become: true
+  vars_files:
+    - "{{ playbook_dir }}/../group_vars/all.yml"
+  tasks:
+    - name: Get Terraform outputs
+      shell: |
+        cd {{ terraform_dir }} && terraform output -json
+      register: terraform_output
+      delegate_to: localhost
+      changed_when: false
+
+    - name: Set node IPs from Terraform output
+      set_fact:
+        node_ips: "{{ terraform_output.stdout | from_json }}"
+
+    - name: Include app deployment role
+      include_role:
+        name: app_deploy
+      vars:
+        app_install_dir: "{{ app_base_dir }}/{{ app_name }}"
+        app_venv_dir: "{{ app_base_dir }}/venv/{{ app_name }}"
+        app_files:
+          - app.py
+          - requirements.txt
+          - config.yml
+
+    - name: Include monitoring role
+      include_role:
+        name: monitoring
+      vars:
+        prometheus_endpoint: "{{ node_ips.prometheus_endpoint }}"
+        grafana_endpoint: "{{ node_ips.grafana_endpoint }}"
+
+    - name: Verify application deployment
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        return_content: yes
+      register: health_check
+      until: health_check.status == 200
+      retries: 5
+      delay: 10 

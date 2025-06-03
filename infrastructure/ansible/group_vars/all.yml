@@ -1,0 +1,24 @@
+---
+# Application variables
+app_name: fraud-detection
+app_description: "Fraud Detection Application"
+app_user: fraudapp
+app_group: fraudapp
+app_base_dir: /opt/fraud-detection
+app_port: 8080
+
+# Terraform integration
+terraform_dir: "{{ playbook_dir }}/../../"
+
+# Monitoring configuration
+prometheus_retention: 15d
+telegraf_interval: 10s
+
+# Security settings
+security_updates: true
+firewall_enabled: true
+allowed_ports:
+  - 22
+  - 8080
+  - 9100  # Node Exporter
+  - 8125  # Telegraf 

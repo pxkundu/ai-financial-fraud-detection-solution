@@ -1,13 +1,20 @@
-name: Data Quality and Governance Visualization
+name: Data Quality and Governance Checks
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'  # Run daily at midnight
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/data_quality/**'
+      - 'src/data_governance/**'
+      - 'tests/data_quality/**'
+      - 'tests/data_governance/**'
 
 jobs:
-  data-quality-visualization:
+  quality-checks:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v3
       
@@ -20,38 +27,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install matplotlib seaborn plotly pandas numpy
           
-      - name: Run Data Quality Checks
+      - name: Run data quality tests
         run: |
-          python dataiku/plugins/custom_recipes/data_quality_check.py
+          python -m pytest tests/data_quality/ -v
           
-      - name: Generate Quality Metrics Visualization
+      - name: Run data governance tests
         run: |
-          python scripts/generate_quality_visualizations.py
-          
-      - name: Generate Lineage Graph
-        run: |
-          python scripts/generate_lineage_graph.py
-          
-      - name: Generate Catalog Dashboard
-        run: |
-          python scripts/generate_catalog_dashboard.py
-          
-      - name: Upload Quality Metrics Visualization
-        uses: actions/upload-artifact@v3
-        with:
-          name: quality-metrics
-          path: dataiku/plots/quality_metrics.png
-          
-      - name: Upload Lineage Graph
-        uses: actions/upload-artifact@v3
-        with:
-          name: lineage-graph
-          path: dataiku/plots/lineage_graph.png
-          
-      - name: Upload Catalog Dashboard
-        uses: actions/upload-artifact@v3
-        with:
-          name: catalog-dashboard
-          path: dataiku/plots/catalog_dashboard.png 
+          python -m pytest tests/data_governance/ -v 

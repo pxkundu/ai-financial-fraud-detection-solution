@@ -4,10 +4,14 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allow manual triggering
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
 
 jobs:
   update-pages:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required for GitHub Pages deployment

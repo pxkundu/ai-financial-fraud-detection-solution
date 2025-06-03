@@ -1,0 +1,15 @@
+[Unit]
+Description={{ app_description }}
+After=network.target
+
+[Service]
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_install_dir }}
+Environment="PATH={{ app_venv_dir }}/bin"
+ExecStart={{ app_venv_dir }}/bin/python {{ app_install_dir }}/app.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target 

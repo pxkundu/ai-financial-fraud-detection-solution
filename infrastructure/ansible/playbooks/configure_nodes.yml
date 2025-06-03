@@ -1,0 +1,49 @@
+---
+- name: Configure EKS Nodes
+  hosts: eks_nodes
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name:
+          - python3-pip
+          - docker.io
+          - ntp
+          - awscli
+        state: present
+
+    - name: Configure Docker daemon
+      copy:
+        content: |
+          {
+            "exec-opts": ["native.cgroupdriver=systemd"],
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "100m"
+            },
+            "storage-driver": "overlay2"
+          }
+        dest: /etc/docker/daemon.json
+        mode: '0644'
+      notify: restart docker
+
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Configure timezone
+      timezone:
+        name: UTC
+
+  handlers:
+    - name: restart docker
+      systemd:
+        name: docker
+        state: restarted 

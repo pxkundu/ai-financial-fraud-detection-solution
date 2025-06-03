@@ -1,0 +1,101 @@
+site_name: AI Financial Fraud Detection Solution
+site_description: Documentation for the AI-powered Financial Fraud Detection Solution
+site_author: Your Organization
+repo_url: https://github.com/pxkundu/ai-financial-fraud-detection-solution
+repo_name: ai-financial-fraud-detection-solution
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed
+  - pymdownx.emoji
+  - pymdownx.tasklist
+  - admonition
+  - footnotes
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Overview:
+    - Introduction: overview/introduction.md
+    - Architecture: overview/architecture.md
+    - Features: overview/features.md
+  - Getting Started:
+    - Prerequisites: getting-started/prerequisites.md
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+  - Development:
+    - Development Guide: development/guide.md
+    - Testing: development/testing.md
+    - Contributing: development/contributing.md
+  - Infrastructure:
+    - Terraform: infrastructure/terraform.md
+    - Ansible: infrastructure/ansible.md
+    - Monitoring: infrastructure/monitoring.md
+  - Data Quality:
+    - Data Pipeline: data-quality/pipeline.md
+    - Governance: data-quality/governance.md
+    - Reports: data-quality/reports.md
+  - API Documentation:
+    - API Reference: api/reference.md
+    - Integration Guide: api/integration.md
+  - Troubleshooting:
+    - Common Issues: troubleshooting/common-issues.md
+    - Advanced Debugging: troubleshooting/advanced.md
+  - CI/CD:
+    - Pipeline Overview: cicd/overview.md
+    - Deployment Process: cicd/deployment.md
+    - Monitoring: cicd/monitoring.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          selection:
+            docstring_style: google
+          rendering:
+            show_source: true
+            show_root_heading: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/pxkundu/ai-financial-fraud-detection-solution
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/your_org
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/company/your_org
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js 

@@ -1,0 +1,201 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Security Scan
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  terraform-validate:
+    name: Terraform Validation
+    needs: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.0.0"
+          
+      - name: Terraform Init
+        run: |
+          cd infrastructure
+          terraform init
+          
+      - name: Terraform Validate
+        run: |
+          cd infrastructure
+          terraform validate
+          
+      - name: Terraform Plan
+        run: |
+          cd infrastructure
+          terraform plan -out=tfplan
+
+  data-quality:
+    name: Data Quality Tests
+    needs: terraform-validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Data Quality Tests
+        run: |
+          python -m pytest tests/data_quality/ -v
+          
+      - name: Generate Data Quality Report
+        run: |
+          python scripts/generate_data_quality_report.py
+
+  dataiku-tests:
+    name: Dataiku Integration Tests
+    needs: data-quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-html markdown2
+          
+      - name: Run Dataiku tests
+        run: |
+          cd dataiku
+          pytest tests/ --html=test-report.html
+          
+      - name: Generate plots
+        run: |
+          cd dataiku
+          python scripts/generate_plots.py
+
+  infrastructure-deploy:
+    name: Infrastructure Deployment
+    needs: dataiku-tests
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        
+      - name: Terraform Apply
+        run: |
+          cd infrastructure
+          terraform apply -auto-approve tfplan
+
+  application-deploy:
+    name: Application Deployment
+    needs: infrastructure-deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          
+      - name: Deploy Application
+        run: |
+          cd infrastructure/ansible
+          ansible-playbook playbooks/deploy_app.yml
+
+  documentation-update:
+    name: Update Documentation
+    needs: application-deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mkdocs mkdocs-material
+          
+      - name: Generate Documentation
+        run: |
+          # Generate all plots and visualizations
+          python scripts/generate_all_plots.py
+          
+          # Create docs directory structure
+          mkdir -p docs/assets/images
+          cp dataiku/plots/*.png docs/assets/images/
+          
+          # Generate documentation
+          mkdocs build
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          commit_message: "Update documentation and visualizations"
+          
+      - name: Verify Deployment
+        run: |
+          echo "Waiting for GitHub Pages deployment..."
+          sleep 30
+          if ! curl -s -f "https://${{ github.repository_owner }}.github.io/ai-financial-fraud-detection-solution/" > /dev/null; then
+            echo "Error: GitHub Pages site is not accessible"
+            exit 1
+          fi
+          echo "Documentation deployment verified successfully" 

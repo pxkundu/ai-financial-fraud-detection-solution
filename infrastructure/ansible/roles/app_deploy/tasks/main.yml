@@ -1,0 +1,34 @@
+---
+- name: Create application directory
+  file:
+    path: "{{ app_install_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy application files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ app_install_dir }}/"
+    mode: '0644'
+  with_items:
+    - "{{ app_files }}"
+
+- name: Install Python dependencies
+  pip:
+    requirements: "{{ app_install_dir }}/requirements.txt"
+    state: present
+    virtualenv: "{{ app_venv_dir }}"
+
+- name: Create systemd service file
+  template:
+    src: app.service.j2
+    dest: /etc/systemd/system/{{ app_name }}.service
+    mode: '0644'
+  notify: restart app service
+
+- name: Enable and start application service
+  systemd:
+    name: "{{ app_name }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes 

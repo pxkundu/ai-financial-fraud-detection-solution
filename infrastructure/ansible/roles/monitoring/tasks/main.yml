@@ -1,0 +1,38 @@
+---
+- name: Install monitoring packages
+  apt:
+    name:
+      - prometheus-node-exporter
+      - telegraf
+    state: present
+    update_cache: yes
+
+- name: Configure Node Exporter
+  template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    mode: '0644'
+  notify: restart node exporter
+
+- name: Configure Telegraf
+  template:
+    src: telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.conf
+    mode: '0644'
+  notify: restart telegraf
+
+- name: Enable and start monitoring services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  with_items:
+    - node_exporter
+    - telegraf
+
+- name: Configure log rotation for monitoring services
+  template:
+    src: monitoring-logrotate.j2
+    dest: /etc/logrotate.d/monitoring
+    mode: '0644' 
