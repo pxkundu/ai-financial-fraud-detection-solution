@@ -36,6 +36,12 @@ jobs:
           # Generate plots
           python scripts/generate_all_plots.py
           
+          # Create docs/assets/images directory if it doesn't exist
+          mkdir -p docs/assets/images
+          
+          # Copy generated plots to docs directory
+          cp dataiku/plots/*.png docs/assets/images/
+          
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
