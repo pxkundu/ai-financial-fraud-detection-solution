@@ -189,13 +189,22 @@ jobs:
           # Generate documentation
           mkdocs build
           
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        with:
+          enablement: true
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./site
+          
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        id: deployment
+        uses: actions/deploy-pages@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
-          publish_branch: gh-pages
-          commit_message: "Update documentation and visualizations"
+          path: ./site
           
       - name: Verify Deployment
         run: |
