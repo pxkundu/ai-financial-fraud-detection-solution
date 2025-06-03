@@ -162,6 +162,111 @@ The project leverages Dataiku DSS for data processing and model development:
   - Load testing
   - Health checks
 
+## Data Quality and Governance
+
+### Data Quality Monitoring
+The project implements comprehensive data quality monitoring through a custom Dataiku plugin:
+
+#### Quality Checks
+- **Completeness Monitoring**:
+  - Missing value detection
+  - Threshold-based validation
+  - Column-level completeness tracking
+  - Automated reporting
+
+- **Consistency Validation**:
+  - Rule-based data validation
+  - Custom validation rules
+  - Violation tracking
+  - Automated alerts
+
+- **Accuracy Verification**:
+  - Reference data comparison
+  - Key column validation
+  - Match ratio calculation
+  - Quality scoring
+
+- **Freshness Tracking**:
+  - Timestamp-based monitoring
+  - Age calculation
+  - Update frequency tracking
+  - SLA monitoring
+
+### Data Lineage Tracking
+The solution includes a robust data lineage tracking system:
+
+#### Lineage Features
+- **Dataset Creation Tracking**:
+  - Source dataset recording
+  - Transformation documentation
+  - Parameter logging
+  - Version tracking
+
+- **Modification History**:
+  - Change tracking
+  - Modification type recording
+  - Timestamp logging
+  - Impact analysis
+
+- **Dependency Management**:
+  - Upstream dependency tracking
+  - Downstream impact analysis
+  - Relationship visualization
+  - Change propagation analysis
+
+### Data Catalog
+A comprehensive data catalog implementation provides:
+
+#### Catalog Features
+- **Dataset Registration**:
+  - Metadata management
+  - Schema documentation
+  - Owner assignment
+  - Tag management
+
+- **Search and Discovery**:
+  - Text-based search
+  - Tag-based filtering
+  - Sensitivity level filtering
+  - Schema browsing
+
+- **Metadata Management**:
+  - Description updates
+  - Tag management
+  - Schema versioning
+  - Access control
+
+#### Integration Example
+```python
+# Initialize components
+dq_checker = DataQualityCheck("transactions")
+lineage_tracker = DataLineageTracker()
+catalog = DataCatalog()
+
+# Process data with quality checks
+quality_results = dq_checker.run_all_checks([
+    {'column': 'amount', 'condition': '>= 0'},
+    {'column': 'timestamp', 'condition': '<= pd.Timestamp.now()'}
+])
+
+# Track lineage
+lineage_tracker.track_dataset_creation(
+    dataset_name="processed_transactions",
+    source_datasets=["raw_transactions"],
+    transformation_type="processing",
+    parameters={"method": "standard_processing"}
+)
+
+# Update catalog
+catalog.update_dataset_metadata(
+    dataset_name="processed_transactions",
+    updates={
+        "last_processed": datetime.now().isoformat(),
+        "quality_score": calculate_quality_score(quality_results)
+    }
+)
+```
+
 ## Project Structure
 ```
 .
@@ -365,3 +470,33 @@ The following plots were generated during the Dataiku feature engineering tests:
 
 ### Customer Statistics
 ![Customer Statistics](dataiku/plots/customer_statistics.png)
+
+## Data Quality and Governance Visualizations
+
+The project includes automated visualization of data quality metrics and governance information through GitHub Actions workflows. These visualizations are generated daily and provide insights into the health and status of our data pipeline.
+
+### Quality Metrics Dashboard
+![Quality Metrics Dashboard](dataiku/plots/quality_metrics.png)
+*Daily tracking of data quality metrics including completeness, consistency, accuracy, and freshness*
+
+### Data Lineage Graph
+![Data Lineage Graph](dataiku/plots/lineage_graph.png)
+*Visual representation of data flow and transformations across the pipeline*
+
+### Data Catalog Dashboard
+![Data Catalog Dashboard](dataiku/plots/catalog_dashboard.png)
+*Comprehensive view of dataset metadata, including size, records, sensitivity, and update frequency*
+
+These visualizations are automatically generated and updated through our GitHub Actions workflow, which runs daily to ensure we have up-to-date insights into our data quality and governance metrics. The workflow:
+
+1. Runs data quality checks
+2. Generates quality metrics visualization
+3. Creates data lineage graph
+4. Produces catalog dashboard
+5. Uploads all visualizations as artifacts
+
+To view the latest visualizations:
+1. Go to the GitHub Actions tab
+2. Select the "Data Quality and Governance Visualization" workflow
+3. Click on the latest successful run
+4. Download the visualization artifacts
