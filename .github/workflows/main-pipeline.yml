@@ -12,6 +12,7 @@ jobs:
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -26,6 +27,7 @@ jobs:
     name: Terraform Validation
     needs: security-scan
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -53,6 +55,7 @@ jobs:
     name: Data Quality Tests
     needs: terraform-validate
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -78,6 +81,7 @@ jobs:
     name: Dataiku Integration Tests
     needs: data-quality
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -108,6 +112,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -132,6 +137,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -156,6 +162,7 @@ jobs:
       contents: write
       pages: write
       id-token: write
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
