@@ -4,17 +4,18 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'docs/**'
-      - 'scripts/**'
-      - '.github/workflows/update_github_pages.yml'
-      - 'requirements.txt'
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   update-pages:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for GitHub Pages deployment
+    
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -48,4 +49,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
           publish_branch: gh-pages
-          commit_message: "Update data quality and governance visualizations" 
+          commit_message: "Update data quality and governance visualizations"
+          force_orphan: true  # Clean up old files 
