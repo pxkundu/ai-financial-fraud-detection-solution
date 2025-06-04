@@ -5,8 +5,6 @@ title: AI Financial Fraud Detection - Data Quality and Governance
 
 # AI-Powered Financial Fraud Detection Solution
 
-![Project Banner](assets/images/quality_metrics.png)
-
 ## 🚀 Overview
 
 This project demonstrates an end-to-end AI/ML solution for detecting financial fraud in real-time. Built with modern cloud technologies and best practices in machine learning, it showcases:
@@ -52,24 +50,19 @@ graph TD
    - Terraform for infrastructure as code
    - Ansible for configuration management
 
-## 📊 Results & Metrics
+## 📊 Data Quality and Governance
 
-### Model Performance
+### Quality Metrics Dashboard
+![Quality Metrics Dashboard](assets/images/quality_metrics.png)
+*Daily tracking of data quality metrics including completeness, consistency, accuracy, and freshness*
 
-![Model Metrics](assets/images/model_metrics.png)
+### Data Lineage Graph
+![Data Lineage Graph](assets/images/lineage_graph.png)
+*Visual representation of data flow and transformations across the pipeline*
 
-- **Accuracy**: 99.2%
-- **Precision**: 98.5%
-- **Recall**: 97.8%
-- **F1 Score**: 98.1%
-
-### System Performance
-
-![System Metrics](assets/images/system_metrics.png)
-
-- **Average Latency**: 150ms
-- **Throughput**: 10,000 TPS
-- **Uptime**: 99.99%
+### Data Catalog Dashboard
+![Data Catalog Dashboard](assets/images/catalog_dashboard.png)
+*Comprehensive view of dataset metadata, including size, records, sensitivity, and update frequency*
 
 ## 🛠️ Technology Stack
 
@@ -79,17 +72,6 @@ graph TD
 - **Infrastructure**: AWS, Terraform, Ansible
 - **Monitoring**: Prometheus, Grafana
 - **CI/CD**: GitHub Actions
-
-## 📈 Data Quality
-
-Our solution maintains high data quality standards:
-
-![Data Quality](assets/images/quality_metrics.png)
-
-- **Completeness**: 99.5%
-- **Consistency**: 98.8%
-- **Accuracy**: 99.2%
-- **Freshness**: 99.9%
 
 ## 🔄 CI/CD Pipeline
 
@@ -150,36 +132,4 @@ For support, please:
 
 - Thanks to all contributors
 - Special thanks to the open-source community
-- Built with [Terraform](https://www.terraform.io/), [Ansible](https://www.ansible.com/), and [Dataiku](https://www.dataiku.com/)
-
-# Data Quality and Governance Visualizations
-
-## Quality Metrics Dashboard
-![Quality Metrics Dashboard](../assets/images/quality_metrics.png)
-*Daily tracking of data quality metrics including completeness, consistency, accuracy, and freshness*
-
-## Data Lineage Graph
-![Data Lineage Graph](../assets/images/lineage_graph.png)
-*Visual representation of data flow and transformations across the pipeline*
-
-## Data Catalog Dashboard
-![Data Catalog Dashboard](../assets/images/catalog_dashboard.png)
-*Comprehensive view of dataset metadata, including size, records, sensitivity, and update frequency*
-
-## How to Update Visualizations
-
-To update these visualizations:
-
-1. Run the plot generation script:
-```bash
-python scripts/generate_all_plots.py
-```
-
-2. Commit and push the changes:
-```bash
-git add docs/assets/images/
-git commit -m "Update data quality and governance visualizations"
-git push
-```
-
-The GitHub Pages site will automatically update with the new visualizations. 
+- Built with [Terraform](https://www.terraform.io/), [Ansible](https://www.ansible.com/), and [Dataiku](https://www.dataiku.com/) 
