@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import os
 
+
 def generate_quality_metrics_plot():
     # Create sample data
     dates = pd.date_range(start='2024-01-01', end='2024-01-31', freq='D')
@@ -40,6 +41,7 @@ def generate_quality_metrics_plot():
     # Save the plot
     plt.savefig('dataiku/plots/quality_metrics.png', dpi=300, bbox_inches='tight')
     plt.close()
+
 
 if __name__ == "__main__":
     generate_quality_metrics_plot() 
