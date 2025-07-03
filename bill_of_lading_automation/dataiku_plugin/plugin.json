@@ -1,0 +1,47 @@
+{
+  "id": "bill-of-lading-automation",
+  "meta": {
+    "label": "Bill of Lading Automation",
+    "description": "Automate extraction, validation, and integration of Bill of Lading documents.",
+    "author": "Open Source Community",
+    "icon": "icon-file-text-o"
+  },
+  "recipes": [
+    {
+      "id": "ingest-document",
+      "label": "Ingest Bill of Lading Document",
+      "description": "Ingest scanned or PDF Bill of Lading documents from storage.",
+      "script": "recipes/ingest_document.py"
+    },
+    {
+      "id": "ocr-extraction",
+      "label": "OCR Extraction",
+      "description": "Extract text and tables from documents using OCR (AWS Textract or other engines).",
+      "script": "recipes/ocr_extraction.py"
+    },
+    {
+      "id": "data-cleaning",
+      "label": "Data Cleaning",
+      "description": "Clean and normalize extracted text and tables.",
+      "script": "recipes/data_cleaning.py"
+    },
+    {
+      "id": "field-extraction",
+      "label": "Field Extraction",
+      "description": "Extract structured fields from cleaned data using regex, NLP, or ML.",
+      "script": "recipes/field_extraction.py"
+    },
+    {
+      "id": "validation",
+      "label": "Validation",
+      "description": "Validate extracted fields and apply business rules.",
+      "script": "recipes/validation.py"
+    },
+    {
+      "id": "integration",
+      "label": "Integration",
+      "description": "Integrate validated data with downstream systems (DB, API, file).",
+      "script": "recipes/integration.py"
+    }
+  ]
+} 

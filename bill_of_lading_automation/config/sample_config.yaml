@@ -1,0 +1,39 @@
+# Sample configuration for Bill of Lading Automation Module
+
+ocr:
+  engine: aws_textract  # or 'tesseract', 'google_vision', etc.
+  aws_region: us-east-1
+  s3_bucket: your-bucket-name
+  s3_input_prefix: bill_of_lading/input/
+  s3_output_prefix: bill_of_lading/output/
+
+fields:
+  shipment_id:
+    pattern: 'Shipment ID: (\\w+)'  # Regex for extraction
+    required: true
+  date:
+    pattern: '(0[1-9]|1[0-2])/[0-3][0-9]/[0-9]{4}'
+    required: true
+  carrier:
+    pattern: 'Carrier: ([A-Za-z0-9 ]+)'  
+    required: true
+  consignee:
+    pattern: 'Consignee: ([A-Za-z0-9 ,]+)'
+    required: true
+  items:
+    table: true  # Extract as table if present
+    required: true
+  weight:
+    pattern: 'Weight: ([0-9,.]+)'
+    required: false
+
+validation:
+  required_fields: [shipment_id, date, carrier, consignee, items]
+  duplicate_check: shipment_id
+  date_format: '%m/%d/%Y'
+
+integration:
+  output_type: database  # or 'csv', 'api', etc.
+  db_connection: my_database_connection
+  api_endpoint: ''
+  csv_path: './output/bill_of_lading.csv' 
